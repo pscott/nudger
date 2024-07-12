@@ -52,21 +52,3 @@ jobs:
         run: |
           cargo check
           cargo test --all
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Update local toolchain
-        run: |
-          rustup update
-
-      - name: Toolchain info
-        run: |
-          cargo --version --verbose
-          rustc --version
-
-      - name: Build
-        run: |
-          cargo build
