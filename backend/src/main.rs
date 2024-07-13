@@ -132,10 +132,16 @@ async fn handle_get_nudge(
     let responses = futures::future::join_all(filter_futures).await;
     let response = responses.into_iter().find_map(|res| res);
 
-    match response {
-        Some(nudge) => Ok(Json(nudge.clone())),
-        None => Err(ServerError::ErrorString("No nudge found".to_string())),
-    }
+    // TMP
+    Ok(Json(GetNudgeResponse {
+        protocol: "Aave".to_string(),
+        text: "You are missing out on $100 per month! Just use Aave".to_string(),
+        cta: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+    }))
+    // match response {
+    //     Some(nudge) => Ok(Json(nudge.clone())),
+    //     None => Err(ServerError::ErrorString("No nudge found".to_string())),
+    // }
 }
 
 pub async fn handle_health() -> Result<impl IntoResponse, ()> {
