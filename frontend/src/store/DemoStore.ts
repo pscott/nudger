@@ -6,6 +6,6 @@ type DemoStore = {
 };
 
 export const useDemoStore = create<DemoStore>((set) => ({
-  selectedDemo: "navbar", // default value
+  selectedDemo: "navbar",
   setSelectedDemo: (demo) => set({ selectedDemo: demo }),
 }));

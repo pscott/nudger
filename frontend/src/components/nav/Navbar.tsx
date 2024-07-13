@@ -1,17 +1,27 @@
 "use client";
 
-import { useDemoStore } from "@/store/DemoStore";
+
 import SelectDemo from "../SelectDemo";
 import Wallet from "../wallet/ConnectWallet";
 
-import { useAccount } from "wagmi";
-import HoverCardNudge from "../nudges/HoverCard";
-import NavbarNudge from "../nudges/NavbarNudge";
+import Link from "next/link";
+
+export const items = [
+  {
+    name: "Demo",
+    url: "/",
+  },
+  {
+    name: "Want to monetize?",
+    url: "/publishers",
+  },
+  {
+    name: "Looking for users?",
+    url: "/advertisers",
+  },
+];
 
 export default function Navbar() {
-  const { address } = useAccount();
-  const { selectedDemo } = useDemoStore();
-
   return (
     <nav className="p-4">
       <div className="bg-[#a3e6fc] max-w-7xl mx-auto p-2 rounded-full flex items-center justify-between">
@@ -29,12 +39,22 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {address && selectedDemo === "navbar" && (
-            <NavbarNudge address={address} />
-          )}
-          {address && selectedDemo === "hover-card" && (
-            <HoverCardNudge address={address} />
-          )}
+          {/* Desktop menu */}
+          {items?.map((item) => (
+            <Link
+              key={item.name}
+              href={item.url}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 
+              ${
+                item.name === "Learn"
+                  ? "bg-white text-sky-600"
+                  : "text-gray-700 hover:bg-white hover:text-sky-600"
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+
           <div className="hidden md:block">
             <div className="flex items-center  rounded-full px-3 py-1">
               <svg

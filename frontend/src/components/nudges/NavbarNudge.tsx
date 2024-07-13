@@ -16,14 +16,14 @@ export default function NavbarNudge({ address }: { address: `0x${string}` }) {
   else if (nudge) {
     return (
       <div className="text-sm">
-        {nudge?.text} <span className="mr-1">→</span>{" "}
+        💡 {nudge?.text}{" "}
         <a
-          className="text-blue-900 font-medium"
-          href={"https://google.com"}
+          className="text-blue-900 font-medium underline"
+          href={nudge?.cta_url}
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn more!
+          {nudge?.cta_text}
         </a>
       </div>
     );

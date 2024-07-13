@@ -1,3 +1,4 @@
+import Banner from "@/components/Banner";
 import ToastNudge from "@/components/nudges/ToastNudge";
 import Swap from "@/components/Swap";
 import Image from "next/image";
@@ -5,6 +6,9 @@ import Image from "next/image";
 export default async function Page() {
   return (
     <div className="absolute inset-0 flex flex-col justify-center items-center">
+      <div className="z-10 w-full max-w-md px-4">
+        <Banner />
+      </div>
       <div className="z-10 w-full max-w-md px-4">
         <Swap />
       </div>

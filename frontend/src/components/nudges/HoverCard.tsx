@@ -29,14 +29,14 @@ export default function HoverCardNudge({
           <span className="text-sm">Psssst... got some alpha for you 👀</span>
         </HoverCardTrigger>
         <HoverCardContent className="text-sm">
-          {nudge?.text}{" "}
+          💡 {nudge?.text}{" "}
           <a
-            className="text-blue-900 font-medium"
-            href={"https://google.com"}
+            className="text-blue-900 font-medium underline"
+            href={nudge?.cta_url}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Learn more!
+            {nudge?.cta_text}
           </a>
         </HoverCardContent>
       </HoverCard>
