@@ -53,7 +53,7 @@ async fn main() {
 
     let port: u16 = env::var("PORT")
         .map(|val| val.parse::<u16>().unwrap())
-        .unwrap_or(8080);
+        .unwrap_or(80);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = TcpListener::bind(addr).await.unwrap();
 
