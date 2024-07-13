@@ -142,7 +142,7 @@ async fn handle_get_nudge(
         Some(nudge) => Ok(Json(nudge.clone())),
         None => Ok(Json(GetNudgeResponse {
             // Default message is Lido nudge. No reason, this is just a placeholder
-            text: "Don't let you ETH stay idle.".to_string(),
+            text: "Don't let your ETH stay idle.".to_string(),
             cta_url: "https://stake.lido.finance/".to_string(),
             cta_text: "Start staking!".to_string(),
         })),
