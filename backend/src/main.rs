@@ -62,7 +62,6 @@ async fn main() {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct CreateNudgeParams {
-    protocol: String,
     cta_url: String,
     cta_text: String,
     filter_name: String,
@@ -76,7 +75,6 @@ async fn handle_create_nudge(
     let mut nudges = state.nudges.lock().await;
 
     let nudge = Nudge {
-        protocol: request.protocol.clone(),
         cta_url: request.cta_url.clone(),
         cta_text: request.cta_text.clone(),
         filter_name: request.filter_name.to_string(),
@@ -96,7 +94,6 @@ struct GetNudgeParams {
 
 #[derive(Debug, Clone, Serialize)]
 struct GetNudgeResponse {
-    protocol: String,
     text: String,
     cta_url: String,
     cta_text: String,
@@ -125,7 +122,6 @@ async fn handle_get_nudge(
                     if let Some(text) = filter(state.client.clone(), target).await {
                         tracing::info!("in let some 2");
                         return Some(GetNudgeResponse {
-                            protocol: nudge.protocol.clone(),
                             text,
                             cta_url: nudge.cta_url.clone(),
                             cta_text: nudge.cta_text.clone(),
@@ -233,7 +229,6 @@ mod tests {
         let create_response = client
             .post("/create-nudge")
             .json(&json!({
-                "protocol": "Aave",
                 "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "cta_text": "Click here!",
                 "filter_name": "aave",
@@ -267,7 +262,6 @@ mod tests {
         let create_response = client
             .post("/create-nudge")
             .json(&json!({
-                "protocol": "zkSync",
                 "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "cta_text": "Claim!",
                 "filter_name": "zksync",
@@ -288,7 +282,6 @@ mod tests {
             println!("Error getting nudge: {:?}", get_response.text());
         }
 
-        get_response.assert_text_contains("zkSync");
         get_response.assert_text_contains("Pudgy");
     }
 }
