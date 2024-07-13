@@ -87,6 +87,7 @@ async fn handle_create_nudge(
 
 #[derive(Debug, Deserialize)]
 struct GetNudgeParams {
+    // TMP: this should be an "address"
     target: String,
 }
 
