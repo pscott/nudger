@@ -5,6 +5,7 @@ use std::pin::Pin;
 
 /// Example of a nudge Aave might want to create
 /// Wants to target anyone with >10k USDT in their wallet
+const MONTHS_IN_YEAR: f64 = 12.0;
 
 pub fn resolve(
     client: reqwest::Client,
@@ -17,42 +18,48 @@ pub fn resolve(
 
         let url = format!("https://api.zerion.io/v1/wallets/{}/positions/?filter[positions]=only_simple&currency=usd&filter[trash]=only_non_trash&sort=value", target);
         let zerion_api_key = env::var("ZERION_API_KEY").unwrap();
+        let zerion_auth = format!("Basic {}", zerion_api_key);
         let response = client
             .get(url)
-            .header("authorization", zerion_api_key)
+            .header("authorization", zerion_auth)
             .header("accept", "application/json")
             .send()
             .await
-            .unwrap();
+            .ok()?;
 
         // Parse the response JSON
-        let response_json: Value = response.json().await.unwrap();
+        let response_json: Value = response.json().await.ok()?;
 
         // Iterate through the `data` array and check for the specific `id`
-        //  let maybe_balance: Option<String> = if let Some(data) = response_json.get("data").and_then(|d| d.as_array()) {
-        //      for item in data {
-        //          if let Some(id) = item.get("id").and_then(|id| id.as_str()) {
-        //              if id == usdt_mainnet_id {
-        //                  if let Some(attributes) = item.get("attributes") {
-        //                      if let Some(value) = attributes.get("value").and_then(|v| v.as_str()) {
-        //                          Some(value.to_string());
-        //                      }
-        //                  }
-        //              }
-        //          }
-        //      }
-        //      None
-        //  };
+        let data: &Value = response_json.get("data")?;
+        let arr = data.as_array()?;
+        let mut balance: Option<f64> = None;
 
-        let limit = 10_000.0;
-        let balance = 1.0;
-        // If balance > 10k, write "You are missing out on ${APY / 12 * balance} per month! Just use aave"
-        // Check if the user is eligible for the nudge
+        // This shoudl be re-written, not the cleanest way
+        for item in arr {
+            let id = item.get("id")?.as_str()?;
+            if id == usdt_mainnet_id {
+                let attributes = item.get("attributes")?;
+                balance = attributes.get("value")?.as_f64();
+                break;
+            }
+        }
+
+        let balance = balance?; // this is ugly
+
+        tracing::info!("balance: {:?}", balance);
+
+        let threshold = 10_000.0;
+
+        if balance < threshold {
+            return None;
+        }
 
         let text = format!(
-            "You are missing out on ${} per month! Just use Aave",
-            apy / balance * limit
+            "You are missing out on ${:.0} per month! Just use Aave",
+            apy / MONTHS_IN_YEAR * balance
         );
+        tracing::info!("text: {:?}", text);
 
         Some(text)
     })

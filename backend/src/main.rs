@@ -82,6 +82,7 @@ async fn handle_create_nudge(
         filter_name: request.filter_name.to_string(),
     };
     tracing::info!(nudge = ?nudge);
+    println!("---\n PUSHED \n---");
     nudges.push(nudge);
 
     Ok("OK") // wtf?
@@ -118,8 +119,11 @@ async fn handle_get_nudge(
             let state = state.clone(); // todo maybe unecessary
             let target = target.clone();
             async move {
+                tracing::info!("Checking nudge: {:?}", nudge);
                 if let Some(filter) = state.filters.get(&nudge.filter_name) {
+                    tracing::info!("in let some 1");
                     if let Some(text) = filter(state.client.clone(), target).await {
+                        tracing::info!("in let some 2");
                         return Some(GetNudgeResponse {
                             protocol: nudge.protocol.clone(),
                             text,
@@ -135,19 +139,13 @@ async fn handle_get_nudge(
 
     // Execute all futures concurrently and find the first non-None response
     let responses = futures::future::join_all(filter_futures).await;
-    let response = responses.into_iter().find_map(|res| res);
+    println!("responses: {:?}", responses);
+    let response = responses.into_iter().find_map(|res| res); // wtf?
 
-    // TMP
-    Ok(Json(GetNudgeResponse {
-        protocol: "Aave".to_string(),
-        text: "You are missing out on $100 per month! Just use Aave".to_string(),
-        cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
-        cta_text: "Click here".to_string(),
-    }))
-    // match response {
-    //     Some(nudge) => Ok(Json(nudge.clone())),
-    //     None => Err(ServerError::ErrorString("No nudge found".to_string())),
-    // }
+    match response {
+        Some(nudge) => Ok(Json(nudge.clone())),
+        None => Err(ServerError::ErrorString("No nudge found".to_string())),
+    }
 }
 
 pub async fn handle_health() -> Result<impl IntoResponse, ()> {
@@ -214,26 +212,39 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_and_get_nudge() {
-        // Assuming you have a function to create your application
+        // construct a subscriber that prints formatted traces to stdout
+        let subscriber = tracing_subscriber::FmtSubscriber::new();
+        // use that subscriber to process traces emitted after this point
+        let _ = tracing::subscriber::set_global_default(subscriber);
+        tracing::info!("Starting server...");
 
         // Create a test client
         let client = TestServer::new(app()).unwrap();
 
         // Create a nudge
-        let _ = client
+        let create_response = client
             .post("/create-nudge")
             .json(&json!({
                 "protocol": "Aave",
-                "cta": "Click here",
+                "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "cta_text": "Click here!",
                 "filter_name": "aave",
             }))
             .await;
+
+        if create_response.status_code() != 200 {
+            println!("Error creating nudge: {:?}", create_response.text());
+        }
 
         // Retrieve the nudge
         let get_response = client // TODO: This should be a get request
             .post("/get-nudge")
             .json(&json!({"target": "0x3e8734ec146c981e3ed1f6b582d447dde701d90c"}))
             .await;
+
+        if get_response.status_code() != 200 {
+            println!("Error getting nudge: {:?}", get_response.text());
+        }
 
         get_response.assert_text_contains("Aave");
         get_response.assert_text_contains("You are missing out on");
