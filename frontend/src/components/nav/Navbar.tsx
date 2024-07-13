@@ -10,14 +10,6 @@ export const items = [
     name: "What is this?",
     url: "/what-is-this",
   },
-  {
-    name: "Want to monetize?",
-    url: "/publishers",
-  },
-  {
-    name: "Looking for users?",
-    url: "/advertisers",
-  },
 ];
 
 export default function Navbar() {
@@ -45,12 +37,7 @@ export default function Navbar() {
             <Link
               key={item.name}
               href={item.url}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 
-              ${
-                item.name === "Learn"
-                  ? "bg-white text-sky-600"
-                  : "text-gray-700 hover:bg-white hover:text-sky-600"
-              }`}
+              className="px-4 py-2 rounded-full text-md font-medium transition-colors duration-200 text-gray-700 hover:bg-white hover:text-sky-600"
             >
               {item.name}
             </Link>
