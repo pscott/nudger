@@ -169,9 +169,17 @@ fn aave_resolve_wrapper(
     Box::pin(filters::aave::resolve(client, target))
 }
 
+fn zksync_resolve_wrapper(
+    client: reqwest::Client,
+    target: String,
+) -> Pin<Box<dyn Future<Output = Option<String>> + Send>> {
+    Box::pin(filters::zksync::resolve(client, target))
+}
+
 fn create_filters() -> HashMap<String, FilterFn> {
     let mut filters: HashMap<String, FilterFn> = HashMap::new();
     filters.insert("aave".to_string(), aave_resolve_wrapper as FilterFn);
+    filters.insert("zksync".to_string(), zksync_resolve_wrapper as FilterFn);
 
     filters
 }
@@ -211,7 +219,7 @@ mod tests {
     use serde_json::json;
 
     #[tokio::test]
-    async fn test_create_and_get_nudge() {
+    async fn test_aave_nudge() {
         // construct a subscriber that prints formatted traces to stdout
         let subscriber = tracing_subscriber::FmtSubscriber::new();
         // use that subscriber to process traces emitted after this point
@@ -248,5 +256,39 @@ mod tests {
 
         get_response.assert_text_contains("Aave");
         get_response.assert_text_contains("You are missing out on");
+    }
+
+    #[tokio::test]
+    async fn test_zksync_nudge() {
+        // Create a test client
+        let client = TestServer::new(app()).unwrap();
+
+        // Create a nudge
+        let create_response = client
+            .post("/create-nudge")
+            .json(&json!({
+                "protocol": "zkSync",
+                "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "cta_text": "Claim!",
+                "filter_name": "zksync",
+            }))
+            .await;
+
+        if create_response.status_code() != 200 {
+            println!("Error creating nudge: {:?}", create_response.text());
+        }
+
+        // Retrieve the nudge
+        let get_response = client // TODO: This should be a get request
+            .post("/get-nudge")
+            .json(&json!({"target": "0x59F3eb596b0af6ebB197362c5F191A9AbADd4F7b"}))
+            .await;
+
+        if get_response.status_code() != 200 {
+            println!("Error getting nudge: {:?}", get_response.text());
+        }
+
+        get_response.assert_text_contains("zkSync");
+        get_response.assert_text_contains("Pudgy");
     }
 }
