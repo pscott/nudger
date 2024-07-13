@@ -4,7 +4,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 // Example of a nudge Aave might want to create
-// Wants to target anyone with >10k USDT in their wallet
+// Wants to target anyone with >0.1 USDT in their wallet
 
 const MONTHS_IN_YEAR: f64 = 12.0;
 

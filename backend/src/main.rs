@@ -135,12 +135,17 @@ async fn handle_get_nudge(
 
     // Execute all futures concurrently and find the first non-None response
     let responses = futures::future::join_all(filter_futures).await;
-    println!("responses: {:?}", responses);
     let response = responses.into_iter().find_map(|res| res); // wtf?
+    tracing::info!("response: {:?}", response);
 
     match response {
         Some(nudge) => Ok(Json(nudge.clone())),
-        None => Err(ServerError::ErrorString("No nudge found".to_string())),
+        None => Ok(Json(GetNudgeResponse {
+            // Default message is Lido nudge. No reason, this is just a placeholder
+            text: "Don't let you ETH stay idle.".to_string(),
+            cta_url: "https://stake.lido.finance/".to_string(),
+            cta_text: "Start staking!".to_string(),
+        })),
     }
 }
 
