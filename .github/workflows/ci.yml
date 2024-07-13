@@ -1,3 +1,5 @@
+ZERION_API_KEY: ${{ secrets.ZERION_API_KEY }}
+
 on:
   push:
     branches:
