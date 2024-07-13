@@ -63,7 +63,8 @@ async fn main() {
 #[derive(Debug, Deserialize, Serialize)]
 struct CreateNudgeParams {
     protocol: String,
-    cta: String,
+    cta_url: String,
+    cta_text: String,
     filter_name: String,
 }
 
@@ -76,7 +77,8 @@ async fn handle_create_nudge(
 
     let nudge = Nudge {
         protocol: request.protocol.clone(),
-        cta: request.cta.clone(),
+        cta_url: request.cta_url.clone(),
+        cta_text: request.cta_text.clone(),
         filter_name: request.filter_name.to_string(),
     };
     tracing::info!(nudge = ?nudge);
@@ -95,7 +97,8 @@ struct GetNudgeParams {
 struct GetNudgeResponse {
     protocol: String,
     text: String,
-    cta: String,
+    cta_url: String,
+    cta_text: String,
 }
 
 async fn handle_get_nudge(
@@ -120,7 +123,8 @@ async fn handle_get_nudge(
                         return Some(GetNudgeResponse {
                             protocol: nudge.protocol.clone(),
                             text,
-                            cta: nudge.cta.clone(),
+                            cta_url: nudge.cta_url.clone(),
+                            cta_text: nudge.cta_text.clone(),
                         });
                     }
                 }
@@ -137,7 +141,8 @@ async fn handle_get_nudge(
     Ok(Json(GetNudgeResponse {
         protocol: "Aave".to_string(),
         text: "You are missing out on $100 per month! Just use Aave".to_string(),
-        cta: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+        cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+        cta_text: "Click here".to_string(),
     }))
     // match response {
     //     Some(nudge) => Ok(Json(nudge.clone())),
