@@ -1,4 +1,5 @@
-ZERION_API_KEY: ${{ secrets.ZERION_API_KEY }}
+env:
+  ZERION_API_KEY: ${{ secrets.ZERION_API_KEY }}
 
 on:
   push:
