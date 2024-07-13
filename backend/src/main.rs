@@ -1,9 +1,11 @@
 use axum::Router;
-use std::collections::HashSet;
 use std::env;
+use std::future::Future;
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use std::pin::Pin;
+use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio::sync::Mutex;
 extern crate dotenv;
 use ::axum::extract::Json;
 use ::axum::http::StatusCode;
@@ -12,8 +14,11 @@ use axum::routing::{get, post};
 use axum::Extension;
 use dotenv::dotenv;
 use ethers::types::Address;
+use nudger::filters;
+use nudger::nudge::Nudge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 enum ServerError {
@@ -58,9 +63,8 @@ async fn main() {
 #[derive(Debug, Deserialize, Serialize)]
 struct CreateNudgeParams {
     protocol: String,
-    text: String,
     cta: String,
-    targets: Vec<Address>,
+    filter_name: String,
 }
 
 async fn handle_create_nudge(
@@ -68,24 +72,29 @@ async fn handle_create_nudge(
     Json(p): Json<Value>,
 ) -> Result<impl IntoResponse, ServerError> {
     let request: CreateNudgeParams = serde_json::from_value(p)?;
-    let mut nudges = state.nudges.lock().unwrap(); // should be async
+    let mut nudges = state.nudges.lock().await;
 
-    let id = nudges.len();
     let nudge = Nudge {
         protocol: request.protocol.clone(),
-        text: request.text.clone(),
         cta: request.cta.clone(),
-        targets: request.targets.iter().cloned().collect(),
+        filter_name: request.filter_name.to_string(),
     };
     tracing::info!(nudge = ?nudge);
-    nudges.insert(id, nudge);
+    nudges.push(nudge);
 
-    Ok("OK")
+    Ok("OK") // wtf?
 }
 
 #[derive(Debug, Deserialize)]
 struct GetNudgeParams {
     target: Address,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GetNudgeResponse {
+    protocol: String,
+    text: String,
+    cta: String,
 }
 
 async fn handle_get_nudge(
@@ -96,9 +105,33 @@ async fn handle_get_nudge(
     let target = params.target;
 
     // Finds the corresponding nudge. Doesn't handle the case where the user is eligible to multiple nudges.
-    let nudges = state.nudges.lock().unwrap(); // should be async
+    let nudges = state.nudges.lock().await;
 
-    match nudges.iter().find(|nudge| nudge.targets.contains(&target)) {
+    // Collect futures for all filter checks
+    let filter_futures: Vec<_> = nudges
+        .iter()
+        .map(|nudge| {
+            let state = state.clone(); // todo maybe unecessary
+            async move {
+                if let Some(filter) = state.filters.get(&nudge.filter_name) {
+                    if let Some(text) = filter(state.client.clone(), &target).await {
+                        return Some(GetNudgeResponse {
+                            protocol: nudge.protocol.clone(),
+                            text,
+                            cta: nudge.cta.clone(),
+                        });
+                    }
+                }
+                None
+            }
+        })
+        .collect();
+
+    // Execute all futures concurrently and find the first non-None response
+    let responses = futures::future::join_all(filter_futures).await;
+    let response = responses.into_iter().find_map(|res| res);
+
+    match response {
         Some(nudge) => Ok(Json(nudge.clone())),
         None => Err(ServerError::ErrorString("No nudge found".to_string())),
     }
@@ -108,27 +141,44 @@ pub async fn handle_health() -> Result<impl IntoResponse, ()> {
     Ok(axum::response::Html("Healthy!"))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Nudge {
-    protocol: String,
-    text: String,
-    cta: String,
-    targets: HashSet<Address>,
-}
+type FilterFn =
+    fn(reqwest::Client, &Address) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct State {
     pub client: reqwest::Client,
     pub nudges: Arc<Mutex<Vec<Nudge>>>, // TODO: This should not be stored in memory and definitely NOT be stored as a vec
+    pub filters: HashMap<String, FilterFn>,
+}
+
+// TODO this is temporarily needed
+fn aave_resolve_wrapper(
+    client: reqwest::Client,
+    target: &Address,
+) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>> {
+    Box::pin(filters::aave::resolve(client, target))
+}
+
+fn create_filters() -> HashMap<String, FilterFn> {
+    let mut filters: HashMap<String, FilterFn> = HashMap::new();
+    filters.insert("aave".to_string(), aave_resolve_wrapper as FilterFn);
+
+    filters
 }
 
 fn app() -> Router {
     dotenv().ok();
 
     let client = reqwest::Client::new();
-    let nudges = Arc::new(Mutex::new(vec![]));
+    let nudges = Arc::new(Mutex::new(vec![])); // Not the correct structure
 
-    let state = State { client, nudges };
+    let filters = create_filters();
+
+    let state = State {
+        client,
+        nudges,
+        filters,
+    };
 
     Router::new()
         .route("/create-nudge", post(handle_create_nudge))
@@ -155,18 +205,18 @@ mod tests {
             .post("/create-nudge")
             .json(&json!({
                 "protocol": "Aave",
-                "text": "Hello, world!",
                 "cta": "Click here",
-                "targets": ["0xd6fcfbe5d76d6ce0e77f00f5a370f8c677ea7150"]
+                "filter_name": "aave",
             }))
             .await;
 
         // Retrieve the nudge
-        let get_response = client
+        let get_response = client // TODO: This should be a get request
             .post("/get-nudge")
-            .json(&json!({"target": "0xd6fcfbe5d76d6ce0e77f00f5a370f8c677ea7150"}))
+            .json(&json!({"target": "0x3e8734ec146c981e3ed1f6b582d447dde701d90c"}))
             .await;
 
         get_response.assert_text_contains("Aave");
+        get_response.assert_text_contains("amazing CTA");
     }
 }
