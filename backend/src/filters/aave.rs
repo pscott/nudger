@@ -3,15 +3,13 @@ use std::env;
 use std::future::Future;
 use std::pin::Pin;
 
-use ethers::types::Address;
-
 /// Example of a nudge Aave might want to create
 /// Wants to target anyone with >10k USDT in their wallet
 
 pub fn resolve(
     client: reqwest::Client,
-    target: &Address,
-) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>> {
+    target: String,
+) -> Pin<Box<dyn Future<Output = Option<String>> + Send>> {
     Box::pin(async move {
         // Call Zerion and check USDT balance
         let apy = 0.1;

@@ -13,7 +13,6 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Extension;
 use dotenv::dotenv;
-use ethers::types::Address;
 use nudger::filters;
 use nudger::nudge::Nudge;
 use serde::{Deserialize, Serialize};
@@ -88,7 +87,7 @@ async fn handle_create_nudge(
 
 #[derive(Debug, Deserialize)]
 struct GetNudgeParams {
-    target: Address,
+    target: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -113,9 +112,10 @@ async fn handle_get_nudge(
         .iter()
         .map(|nudge| {
             let state = state.clone(); // todo maybe unecessary
+            let target = target.clone();
             async move {
                 if let Some(filter) = state.filters.get(&nudge.filter_name) {
-                    if let Some(text) = filter(state.client.clone(), &target).await {
+                    if let Some(text) = filter(state.client.clone(), target).await {
                         return Some(GetNudgeResponse {
                             protocol: nudge.protocol.clone(),
                             text,
@@ -148,8 +148,7 @@ pub async fn handle_health() -> Result<impl IntoResponse, ()> {
     Ok(axum::response::Html("Healthy!"))
 }
 
-type FilterFn =
-    fn(reqwest::Client, &Address) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>>;
+type FilterFn = fn(reqwest::Client, String) -> Pin<Box<dyn Future<Output = Option<String>> + Send>>;
 
 #[derive(Clone)]
 pub struct State {
@@ -161,8 +160,8 @@ pub struct State {
 // TODO this is temporarily needed
 fn aave_resolve_wrapper(
     client: reqwest::Client,
-    target: &Address,
-) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>> {
+    target: String,
+) -> Pin<Box<dyn Future<Output = Option<String>> + Send>> {
     Box::pin(filters::aave::resolve(client, target))
 }
 
