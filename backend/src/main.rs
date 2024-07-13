@@ -185,6 +185,24 @@ fn create_filters() -> HashMap<String, FilterFn> {
     filters
 }
 
+#[derive(Debug, Serialize)]
+struct InfoResponse {
+    name: String,
+    version: String,
+}
+
+async fn handle_root(
+    Extension(_state): Extension<State>,
+) -> Result<impl IntoResponse, ServerError> {
+    let version = env!("CARGO_PKG_VERSION");
+    let name = env!("CARGO_PKG_NAME");
+
+    Ok(Json(InfoResponse {
+        version: version.to_string(),
+        name: name.to_string(),
+    }))
+}
+
 fn app() -> Router {
     dotenv().ok();
 
@@ -209,6 +227,7 @@ fn app() -> Router {
         .route("/create-nudge", post(handle_create_nudge))
         .route("/get-nudge", post(handle_get_nudge)) // should be a get request
         .route("/health", get(handle_health))
+        .route("/", get(handle_root))
         .layer(Extension(state))
         .layer(cors)
 }
