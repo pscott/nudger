@@ -1,4 +1,4 @@
-import Toast from "@/components/nudges/Toast";
+import ToastNudge from "@/components/nudges/ToastNudge";
 import Swap from "@/components/Swap";
 import Image from "next/image";
 
@@ -8,7 +8,7 @@ export default async function Page() {
       <div className="z-10 w-full max-w-md px-4">
         <Swap />
       </div>
-      <Toast />
+      <ToastNudge />
       <div className="absolute inset-x-0 bottom-0 overflow-hidden">
         <div className="relative w-[200%] sm:w-full origin-bottom-left">
           <Image

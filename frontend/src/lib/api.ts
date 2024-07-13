@@ -1,11 +1,11 @@
-export interface Nudge {
-  protocol: string;
+export interface INudge {
   text: string;
-  cta: string;
+  cta_text: string;
+  cta_url: string;
   targets: string[];
 }
 
-export async function fetchNudge(address: `0x${string}`): Promise<Nudge> {
+export async function fetchNudge(address: `0x${string}`): Promise<INudge> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-nudge`,
