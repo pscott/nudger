@@ -1,4 +1,12 @@
+"use client";
+
+import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useAccount } from "wagmi";
+
 export default function Swap() {
+  const { open } = useWeb3Modal();
+  const { status: walletStatus } = useAccount();
+
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6 w-[360px] mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -103,9 +111,19 @@ export default function Swap() {
           <span className="text-xl font-bold text-gray-400">0.0</span>
         </div>
       </div>
-      <button className="w-full bg-blue-900 text-white py-4 rounded-2xl font-semibold text-lg hover:bg-blue-600 transition-colors">
-        Connect Wallet
-      </button>
+      {walletStatus === "connected" && (
+        <button className="w-full bg-blue-900 text-white py-4 rounded-2xl font-semibold text-lg hover:bg-blue-600 transition-colors">
+          Swap
+        </button>
+      )}
+      {walletStatus !== "connected" && (
+        <button
+          className="w-full bg-blue-900 text-white py-4 rounded-2xl font-semibold text-lg hover:bg-blue-600 transition-colors"
+          onClick={() => open()}
+        >
+          Connect Wallet
+        </button>
+      )}
     </div>
   );
 }

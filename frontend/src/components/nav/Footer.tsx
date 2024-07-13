@@ -12,7 +12,7 @@ const socials = [
   },
   {
     name: "GitHub",
-    url: "https://github.com/Maxservais/onchain-reviews",
+    url: "https://github.com/pscott/nudger",
     IconComponent: RxGithubLogo,
   },
 ];
