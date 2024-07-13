@@ -19,6 +19,7 @@ use nudger::nudge::Nudge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use tower_http::cors::{Any, CorsLayer};
 
 #[derive(Debug, PartialEq, Clone)]
 enum ServerError {
@@ -180,11 +181,18 @@ fn app() -> Router {
         filters,
     };
 
+    // Create a CORS layer that allows all requests
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     Router::new()
         .route("/create-nudge", post(handle_create_nudge))
         .route("/get-nudge", post(handle_get_nudge)) // should be a get request
         .route("/health", get(handle_health))
         .layer(Extension(state))
+        .layer(cors)
 }
 
 #[cfg(test)]
@@ -217,6 +225,6 @@ mod tests {
             .await;
 
         get_response.assert_text_contains("Aave");
-        get_response.assert_text_contains("amazing CTA");
+        get_response.assert_text_contains("You are missing out on");
     }
 }
