@@ -1,10 +1,10 @@
-export default function Publishers() {
+export default function WhatIsThis() {
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8 ">
       <div className="mx-auto max-w-4xl rounded-3xl border border-sky-100 bg-sky-50 shadow-sm overflow-hidden">
         <div className="p-6 sm:p-10">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Why Partner with Us
+            What Is This?
           </h2>
 
           <div className="space-y-6">

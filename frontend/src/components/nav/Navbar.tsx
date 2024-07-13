@@ -1,6 +1,5 @@
 "use client";
 
-
 import SelectDemo from "../SelectDemo";
 import Wallet from "../wallet/ConnectWallet";
 
@@ -8,8 +7,8 @@ import Link from "next/link";
 
 export const items = [
   {
-    name: "Demo",
-    url: "/",
+    name: "What is this?",
+    url: "/what-is-this",
   },
   {
     name: "Want to monetize?",
@@ -26,13 +25,15 @@ export default function Navbar() {
     <nav className="p-4">
       <div className="bg-[#a3e6fc] max-w-7xl mx-auto p-2 rounded-full flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <svg
-            className="ml-4 h-8 w-8 text-blue-900"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
+          <Link href="/">
+            <svg
+              className="ml-4 h-8 w-8 text-blue-900"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </Link>
           <div className="hidden md:block">
             <SelectDemo />
           </div>

@@ -26,9 +26,11 @@ export default function HoverCardNudge({
     return (
       <HoverCard>
         <HoverCardTrigger>
-          <span className="text-sm">Psssst... got some alpha for you 👀</span>
+          <span className="text-md">
+            Psssst... got some alpha for you 👀. Scratch me!
+          </span>
         </HoverCardTrigger>
-        <HoverCardContent className="text-sm">
+        <HoverCardContent className="text-sm rounded-2xl">
           💡 {nudge?.text}{" "}
           <a
             className="text-blue-900 font-medium underline"

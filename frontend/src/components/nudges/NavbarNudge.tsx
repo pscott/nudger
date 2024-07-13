@@ -15,7 +15,7 @@ export default function NavbarNudge({ address }: { address: `0x${string}` }) {
   else if (isError) return null;
   else if (nudge) {
     return (
-      <div className="text-sm">
+      <div className="text-md">
         💡 {nudge?.text}{" "}
         <a
           className="text-blue-900 font-medium underline"
