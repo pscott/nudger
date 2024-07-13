@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Nudge {
     pub protocol: String,
-    pub text: String,
     pub cta: String,
 
     #[serde(skip_serializing)]
