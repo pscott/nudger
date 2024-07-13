@@ -1,5 +1,4 @@
 use axum::Router;
-use std::collections::HashSet;
 use std::env;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
@@ -12,8 +11,11 @@ use axum::routing::{get, post};
 use axum::Extension;
 use dotenv::dotenv;
 use ethers::types::Address;
+use nudger::filters;
+use nudger::nudge::Nudge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 enum ServerError {
@@ -60,7 +62,7 @@ struct CreateNudgeParams {
     protocol: String,
     text: String,
     cta: String,
-    targets: Vec<Address>,
+    filter_name: String,
 }
 
 async fn handle_create_nudge(
@@ -70,15 +72,14 @@ async fn handle_create_nudge(
     let request: CreateNudgeParams = serde_json::from_value(p)?;
     let mut nudges = state.nudges.lock().unwrap(); // should be async
 
-    let id = nudges.len();
     let nudge = Nudge {
         protocol: request.protocol.clone(),
         text: request.text.clone(),
         cta: request.cta.clone(),
-        targets: request.targets.iter().cloned().collect(),
+        filter_name: request.filter_name.to_string(),
     };
     tracing::info!(nudge = ?nudge);
-    nudges.insert(id, nudge);
+    nudges.push(nudge);
 
     Ok("OK")
 }
@@ -98,7 +99,14 @@ async fn handle_get_nudge(
     // Finds the corresponding nudge. Doesn't handle the case where the user is eligible to multiple nudges.
     let nudges = state.nudges.lock().unwrap(); // should be async
 
-    match nudges.iter().find(|nudge| nudge.targets.contains(&target)) {
+    let result = nudges
+        .iter()
+        .find(|nudge| match state.filters.get(&nudge.filter_name) {
+            Some(filter) => filter(&target),
+            None => false,
+        });
+
+    match result {
         Some(nudge) => Ok(Json(nudge.clone())),
         None => Err(ServerError::ErrorString("No nudge found".to_string())),
     }
@@ -108,27 +116,29 @@ pub async fn handle_health() -> Result<impl IntoResponse, ()> {
     Ok(axum::response::Html("Healthy!"))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Nudge {
-    protocol: String,
-    text: String,
-    cta: String,
-    targets: HashSet<Address>,
-}
+type FilterFn = fn(&Address) -> bool;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct State {
     pub client: reqwest::Client,
     pub nudges: Arc<Mutex<Vec<Nudge>>>, // TODO: This should not be stored in memory and definitely NOT be stored as a vec
+    pub filters: HashMap<String, FilterFn>,
 }
 
 fn app() -> Router {
     dotenv().ok();
 
     let client = reqwest::Client::new();
-    let nudges = Arc::new(Mutex::new(vec![]));
+    let nudges = Arc::new(Mutex::new(vec![])); // Not the correct structure
+    let mut filters: HashMap<String, FilterFn> = HashMap::new();
+    filters.insert("aave".to_string(), filters::aave::is_eligible);
+    // Create filters
 
-    let state = State { client, nudges };
+    let state = State {
+        client,
+        nudges,
+        filters,
+    };
 
     Router::new()
         .route("/create-nudge", post(handle_create_nudge))
@@ -157,12 +167,12 @@ mod tests {
                 "protocol": "Aave",
                 "text": "Hello, world!",
                 "cta": "Click here",
-                "targets": ["0xd6fcfbe5d76d6ce0e77f00f5a370f8c677ea7150"]
+                "filter_name": "aave",
             }))
             .await;
 
         // Retrieve the nudge
-        let get_response = client
+        let get_response = client // TODO: This should be a get request
             .post("/get-nudge")
             .json(&json!({"target": "0xd6fcfbe5d76d6ce0e77f00f5a370f8c677ea7150"}))
             .await;
