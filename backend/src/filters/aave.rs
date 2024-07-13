@@ -56,6 +56,6 @@ pub fn resolve(
             apy / balance * limit
         );
 
-        Some("amazing CTA".to_string())
+        Some(text)
     })
 }
