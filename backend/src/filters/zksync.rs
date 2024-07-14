@@ -50,7 +50,7 @@ pub fn resolve(
             return None;
         }
 
-        let text = "You have a Pudgy Penguin! Claim your ZkSync airdrop now!".to_string();
+        let text = "You have a Pudgy Penguin!".to_string();
         tracing::info!("text: {:?}", text);
 
         Some(text)
