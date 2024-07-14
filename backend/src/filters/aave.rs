@@ -58,7 +58,7 @@ pub fn resolve(
         }
 
         let text = format!(
-            "You are missing out on ${:.0} per month! Just use Aave",
+            "You are missing out on ${:.0} per month!",
             apy / MONTHS_IN_YEAR * balance
         );
         tracing::info!("text: {:?}", text);
