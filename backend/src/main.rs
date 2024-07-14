@@ -239,7 +239,7 @@ fn create_nudges() -> Vec<Nudge> {
         // Memes
         Nudge {
             cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
-            cta_text: "Click here!".to_string(),
+            cta_text: "View our Degen leaderboard.".to_string(),
             filter_name: "memes".to_string(),
         },
         // Collector

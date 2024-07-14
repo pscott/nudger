@@ -54,7 +54,7 @@ pub fn resolve(
         } else if total_balance < 100_000.0 {
             text = format!("You have ${total_balance:.0} decent balance of shitcoins.");
         } else {
-            text = format!("${total_balance:.0} worth of shitcoins.");
+            text = format!("${total_balance:.0} worth of shitcoins. Such a degen.");
         }
 
         tracing::info!("text: {:?}", text);
