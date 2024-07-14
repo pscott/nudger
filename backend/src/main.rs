@@ -183,11 +183,22 @@ fn memes_resolve_wrapper(
     Box::pin(filters::memes::resolve(client, target))
 }
 
+fn collector_resolve_wrapper(
+    client: reqwest::Client,
+    target: String,
+) -> Pin<Box<dyn Future<Output = Option<String>> + Send>> {
+    Box::pin(filters::collector::resolve(client, target))
+}
+
 fn create_filters() -> HashMap<String, FilterFn> {
     let mut filters: HashMap<String, FilterFn> = HashMap::new();
     filters.insert("aave".to_string(), aave_resolve_wrapper as FilterFn);
     filters.insert("zksync".to_string(), zksync_resolve_wrapper as FilterFn);
     filters.insert("memes".to_string(), memes_resolve_wrapper as FilterFn);
+    filters.insert(
+        "collector".to_string(),
+        collector_resolve_wrapper as FilterFn,
+    );
 
     filters
 }
@@ -215,14 +226,14 @@ fn create_nudges() -> Vec<Nudge> {
     let nudges = vec![
         // Aave
         Nudge {
-            cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
-            cta_text: "Click here!".to_string(),
+            cta_url: "https://app.aave.com/".to_string(),
+            cta_text: "Just use Aave".to_string(),
             filter_name: "aave".to_string(),
         },
         // ZkSync
         Nudge {
-            cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
-            cta_text: "Click here!".to_string(),
+            cta_url: "https://claim.zknation.io/".to_string(),
+            cta_text: "Claim your $ZK airdrop!".to_string(),
             filter_name: "zksync".to_string(),
         },
         // Memes
@@ -230,6 +241,12 @@ fn create_nudges() -> Vec<Nudge> {
             cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
             cta_text: "Click here!".to_string(),
             filter_name: "memes".to_string(),
+        },
+        // Collector
+        Nudge {
+            cta_url: "https://opensea.io/".to_string(),
+            cta_text: "Trade them on OpenSea".to_string(),
+            filter_name: "collector".to_string(),
         },
     ];
 
@@ -337,5 +354,28 @@ mod tests {
         }
 
         get_response.assert_text_contains("shitcoin");
+    }
+
+    #[tokio::test]
+    async fn test_collector_nudge() {
+        // construct a subscriber that prints formatted traces to stdout
+        let subscriber = tracing_subscriber::FmtSubscriber::new();
+        // use that subscriber to process traces emitted after this point
+        let _ = tracing::subscriber::set_global_default(subscriber);
+        tracing::info!("Starting server...");
+        // Create a test client
+        let client = TestServer::new(app()).unwrap();
+
+        // Retrieve the nudge
+        let get_response = client
+            .post("/get-nudge")
+            .json(&json!({"target": "0x5EF29cf961cf3Fc02551B9BdaDAa4418c446c5dd"}))
+            .await;
+
+        if get_response.status_code() != 200 {
+            println!("Error getting nudge: {:?}", get_response.text());
+        }
+
+        get_response.assert_text_contains("NFT");
     }
 }
