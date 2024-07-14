@@ -1,3 +1,4 @@
+use num_format::{Locale, ToFormattedString};
 use serde_json::Value;
 use std::env;
 use std::future::Future;
@@ -47,14 +48,16 @@ pub fn resolve(
         tracing::info!("total shitcoin balance: {:?}", total_balance);
 
         let text;
-        if total_balance == 0.0 {
+        let total_balance: u64 = total_balance as u64;
+        let nb = total_balance.to_formatted_string(&Locale::en);
+        if total_balance <= 10 {
             return None;
-        } else if total_balance < 10_000.0 {
-            text = format!("You have ${total_balance:.0} worth of shitcoins.");
-        } else if total_balance < 100_000.0 {
-            text = format!("You have ${total_balance:.0} decent balance of shitcoins.");
+        } else if total_balance < 10_000 {
+            text = format!("You have ${nb:} worth of shitcoins.");
+        } else if total_balance < 100_000 {
+            text = format!("You have ${nb:}. Decent balance of shitcoins.");
         } else {
-            text = format!("${total_balance:.0} worth of shitcoins. Such a degen.");
+            text = format!("${nb:} worth of shitcoins. Such a degen.");
         }
 
         tracing::info!("text: {:?}", text);
