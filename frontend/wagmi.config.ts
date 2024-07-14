@@ -22,38 +22,6 @@ const metadata = {
 
 const chains: [Chain, ...Chain[]] = [mainnet];
 
-// Used for read-only operations and for simulating contract interactions
-export const publicClients = chains.map((chain) =>
-  createPublicClient({
-    chain,
-    transport: http(),
-  })
-);
-
-export const getPublicClient = (chainId: number) => {
-  const client = publicClients.find((client) => client.chain.id === chainId);
-
-  if (!client) throw new Error(`Unsupported chain ID: ${chainId}`);
-
-  return client;
-};
-
-// Used for write operations, i.e., transactions that change the state of the blockchain
-export const walletClients = chains.map((chain) =>
-  createWalletClient({
-    chain,
-    transport: http(),
-  })
-);
-
-export const getWalletClient = (chainId: number) => {
-  const client = walletClients.find((client) => client.chain.id === chainId);
-
-  if (!client) throw new Error(`Unsupported chain ID: ${chainId}`);
-
-  return client;
-};
-
 // Create wagmiConfig
 export const config = createConfig({
   chains: chains,

@@ -7,8 +7,8 @@ import Link from "next/link";
 
 export const items = [
   {
-    name: "What is this?",
-    url: "/what-is-this",
+    name: "About",
+    url: "/about",
   },
 ];
 
