@@ -210,19 +210,38 @@ async fn handle_root(
     }))
 }
 
+// This is a temporary function to add some nudges to the nudges vec, since the frontend won't call this function.
+fn create_nudges() -> Vec<Nudge> {
+    let nudges = vec![
+        // Aave
+        Nudge {
+            cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+            cta_text: "Click here!".to_string(),
+            filter_name: "aave".to_string(),
+        },
+        // ZkSync
+        Nudge {
+            cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+            cta_text: "Click here!".to_string(),
+            filter_name: "zksync".to_string(),
+        },
+        // Memes
+        Nudge {
+            cta_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+            cta_text: "Click here!".to_string(),
+            filter_name: "memes".to_string(),
+        },
+    ];
+
+    nudges
+}
+
 fn app() -> Router {
     dotenv().ok();
 
     let client = reqwest::Client::new();
-    let nudges = Arc::new(Mutex::new(vec![])); // Not the correct structure
 
     let filters = create_filters();
-
-    let state = State {
-        client,
-        nudges,
-        filters,
-    };
 
     // Create a CORS layer that allows all requests
     let cors = CorsLayer::new()
@@ -230,8 +249,17 @@ fn app() -> Router {
         .allow_methods(Any)
         .allow_headers(Any);
 
+    let nudge_vec = create_nudges();
+    let nudges = Arc::new(Mutex::new(nudge_vec));
+
+    let state = State {
+        client,
+        nudges,
+        filters,
+    };
+
     Router::new()
-        .route("/create-nudge", post(handle_create_nudge))
+        .route("/create-nudge", post(handle_create_nudge)) // ideally this endpoint would exist but it's disabled and embedded directly for now
         .route("/get-nudge", post(handle_get_nudge)) // should be a get request
         .route("/health", get(handle_health))
         .route("/", get(handle_root))
@@ -256,20 +284,6 @@ mod tests {
         // Create a test client
         let client = TestServer::new(app()).unwrap();
 
-        // Create a nudge
-        let create_response = client
-            .post("/create-nudge")
-            .json(&json!({
-                "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                "cta_text": "Click here!",
-                "filter_name": "aave",
-            }))
-            .await;
-
-        if create_response.status_code() != 200 {
-            println!("Error creating nudge: {:?}", create_response.text());
-        }
-
         // Retrieve the nudge
         let get_response = client // TODO: This should be a get request
             .post("/get-nudge")
@@ -288,20 +302,6 @@ mod tests {
     async fn test_zksync_nudge() {
         // Create a test client
         let client = TestServer::new(app()).unwrap();
-
-        // Create a nudge
-        let create_response = client
-            .post("/create-nudge")
-            .json(&json!({
-                "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                "cta_text": "Claim!",
-                "filter_name": "zksync",
-            }))
-            .await;
-
-        if create_response.status_code() != 200 {
-            println!("Error creating nudge: {:?}", create_response.text());
-        }
 
         // Retrieve the nudge
         let get_response = client // TODO: This should be a get request
@@ -325,20 +325,6 @@ mod tests {
         tracing::info!("Starting server...");
         // Create a test client
         let client = TestServer::new(app()).unwrap();
-
-        // Create a nudge
-        let create_response = client
-            .post("/create-nudge")
-            .json(&json!({
-                "cta_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                "cta_text": "Time to swap to some ETH.",
-                "filter_name": "memes",
-            }))
-            .await;
-
-        if create_response.status_code() != 200 {
-            println!("Error creating nudge: {:?}", create_response.text());
-        }
 
         // Retrieve the nudge
         let get_response = client

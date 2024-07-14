@@ -35,12 +35,19 @@ pub fn resolve(
         let arr = data.as_array()?;
 
         // This shoudl be re-written, not the cleanest way
+        let mut found = false;
         for item in arr {
             let id = item.get("id")?.as_str()?;
             if id == pudgy_collection_id {
+                tracing::info!("{:?}", item);
                 // Maybe should check that `nft_counts > 0` but idk
+                found = true;
                 break;
             }
+        }
+
+        if !found {
+            return None;
         }
 
         let text = "You have a Pudgy Penguin! Claim your ZkSync airdrop now!".to_string();
