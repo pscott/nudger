@@ -13,7 +13,7 @@ if (!projectId) throw new Error("Project ID is not defined");
 createWeb3Modal({
   wagmiConfig: config,
   projectId,
-  allowUnsupportedChain: false,
+  allowUnsupportedChain: true,
   defaultChain: mainnet,
   featuredWalletIds: [
     "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96", // Metamask
