@@ -16,7 +16,7 @@ if (!projectId) throw new Error("Project ID is not defined");
 const metadata = {
   name: "Web3Modal",
   description: "Web3Modal Nudger",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000", // origin must match your domain & subdomain
+  url: process.env.NEXT_PUBLIC_APP_URL as string, // origin must match your domain & subdomain
   icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
 
