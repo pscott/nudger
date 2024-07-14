@@ -4,7 +4,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 // Example of a nudge Aave might want to create
-// Wants to target anyone with >0.1 USDT in their wallet
+// Wants to target anyone with 10k USDT (mainnet) on their wallet
 
 const MONTHS_IN_YEAR: f64 = 12.0;
 
@@ -17,6 +17,7 @@ pub fn resolve(
         let apy = 0.1;
         let usdt_mainnet_id = "0xdac17f958d2ee523a2206206994597c13d831ec7-ethereum-asset-asset";
 
+        // TODO: simplify query and add appropriate filters
         let url = format!("https://api.zerion.io/v1/wallets/{}/positions/?filter[positions]=only_simple&currency=usd&filter[trash]=only_non_trash&sort=value", target);
         let zerion_api_key = env::var("ZERION_API_KEY").unwrap();
         let zerion_auth = format!("Basic {}", zerion_api_key);
@@ -41,7 +42,7 @@ pub fn resolve(
             let id = item.get("id")?.as_str()?;
             if id == usdt_mainnet_id {
                 let attributes = item.get("attributes")?;
-                balance = attributes.get("value")?.as_f64();
+                balance = attributes.get("value")?.as_f64(); // TODO: should be `quantity` -> `numeric`
                 break;
             }
         }
